@@ -4,6 +4,7 @@
   "description": "Automate WhatsApp invitation sending with PDF attachments",
   "start_url": "/",
   "display": "standalone",
+  "prefer_related_applications": false,
   "background_color": "#ffffff",
   "theme_color": "#0ea5e9",
   "orientation": "portrait-primary",

@@ -6,6 +6,13 @@ const withPWA = require('next-pwa')({
   register: true,
   skipWaiting: true,
   disable: !isProduction,
+  sw: 'sw.js',
+  swcMinify: true,
+  cacheOnFrontEndNav: false,
+  reloadOnOnline: true,
+  disableDevLogs: true,
+  publicExcludes: ['!robots.txt', '!sitemap.xml'],
+  buildExcludes: [/middleware-manifest\.json$/],
   runtimeCaching: [
     {
       urlPattern: /^https:\/\/fonts\.(?:gstatic|googleapis)\.com\/.*/i,
@@ -31,13 +38,14 @@ const withPWA = require('next-pwa')({
     },
     {
       urlPattern: /\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,
-      handler: 'StaleWhileRevalidate',
+      handler: 'NetworkFirst',
       options: {
         cacheName: 'static-image-assets',
         expiration: {
           maxEntries: 64,
-          maxAgeSeconds: 24 * 60 * 60, // 24 hours
+          maxAgeSeconds: 0, // No cache
         },
+        networkTimeoutSeconds: 10,
       },
     },
     {
@@ -77,35 +85,38 @@ const withPWA = require('next-pwa')({
     },
     {
       urlPattern: /\.(?:js)$/i,
-      handler: 'StaleWhileRevalidate',
+      handler: 'NetworkFirst',
       options: {
         cacheName: 'static-js-assets',
         expiration: {
           maxEntries: 48,
-          maxAgeSeconds: 24 * 60 * 60, // 24 hours
+          maxAgeSeconds: 0, // No cache
         },
+        networkTimeoutSeconds: 10,
       },
     },
     {
       urlPattern: /\.(?:css|less)$/i,
-      handler: 'StaleWhileRevalidate',
+      handler: 'NetworkFirst',
       options: {
         cacheName: 'static-style-assets',
         expiration: {
           maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60, // 24 hours
+          maxAgeSeconds: 0, // No cache
         },
+        networkTimeoutSeconds: 10,
       },
     },
     {
       urlPattern: /\/_next\/data\/.+\/.+\.json$/i,
-      handler: 'StaleWhileRevalidate',
+      handler: 'NetworkFirst',
       options: {
         cacheName: 'next-data',
         expiration: {
           maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60, // 24 hours
+          maxAgeSeconds: 0, // No cache
         },
+        networkTimeoutSeconds: 10,
       },
     },
     {
@@ -142,14 +153,12 @@ const withPWA = require('next-pwa')({
         cacheName: 'others',
         expiration: {
           maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60, // 24 hours
+          maxAgeSeconds: 0, // No cache - always fetch fresh
         },
         networkTimeoutSeconds: 10,
       },
     },
   ],
-  buildExcludes: [/middleware-manifest\.json$/],
-  publicExcludes: ['!robots.txt', '!sitemap.xml'],
 });
 
 const nextConfig = {

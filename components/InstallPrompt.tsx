@@ -22,8 +22,10 @@ export default function InstallPrompt() {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
       const isInStandaloneMode = (window.navigator as any).standalone === true;
+      const isAndroidStandalone = window.matchMedia('(display-mode: standalone)').matches && 
+                                  /Android/.test(navigator.userAgent);
       
-      if (isStandalone || (isIOS && isInStandaloneMode)) {
+      if (isStandalone || (isIOS && isInStandaloneMode) || isAndroidStandalone) {
         setIsInstalled(true);
         return;
       }

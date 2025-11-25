@@ -90,23 +90,43 @@ textarea {
   }
 }
 
-/* Fullscreen PWA support */
+/* Fullscreen PWA support - Android and iOS */
 @media (display-mode: standalone) {
   body {
     /* Remove browser UI padding when in standalone mode */
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
+    /* Ensure full screen */
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
   }
   
   /* Hide address bar area */
   html {
     height: 100%;
     height: -webkit-fill-available;
+    overflow: hidden;
   }
   
-  body {
-    min-height: 100vh;
-    min-height: -webkit-fill-available;
+  /* Main content area */
+  main {
+    height: 100vh;
+    height: -webkit-fill-available;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* iOS standalone mode */
+@supports (-webkit-touch-callout: none) {
+  @media (display-mode: standalone) {
+    body {
+      /* iOS specific adjustments */
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+    }
   }
 }
 

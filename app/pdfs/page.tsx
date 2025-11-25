@@ -157,24 +157,38 @@ export default function PDFsPage() {
           <p className="text-lg font-semibold text-gray-700 mb-2">
             Drag and drop PDFs here, or
           </p>
-          <label htmlFor="pdf-file-input" className="inline-block cursor-pointer">
-            <input
-              type="file"
-              accept="application/pdf,.pdf"
-              multiple
-              onChange={handleFileInput}
-              className="hidden"
-              id="pdf-file-input"
-            />
-            <span className="inline-block">
-              <Button 
-                variant="primary"
-                type="button"
-              >
-                Choose Files
-              </Button>
-            </span>
-          </label>
+          <input
+            type="file"
+            accept="application/pdf,.pdf"
+            multiple
+            onChange={handleFileInput}
+            className="hidden"
+            id="pdf-file-input"
+          />
+          <Button 
+            variant="primary"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              // Directly trigger file input - works on iOS and Android
+              const input = document.getElementById('pdf-file-input') as HTMLInputElement;
+              if (input) {
+                // Create a new click event to ensure it works on all mobile browsers
+                const clickEvent = new MouseEvent('click', {
+                  view: window,
+                  bubbles: true,
+                  cancelable: true,
+                });
+                input.dispatchEvent(clickEvent);
+                // Also try direct click as fallback
+                setTimeout(() => {
+                  input.click();
+                }, 0);
+              }
+            }}
+          >
+            Choose Files
+          </Button>
           <p className="text-sm text-gray-500 mt-2">
             Upload your invitation PDF files
           </p>

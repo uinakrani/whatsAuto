@@ -7,7 +7,6 @@ const withPWA = require('next-pwa')({
   skipWaiting: true,
   disable: !isProduction,
   sw: 'sw.js',
-  swcMinify: true,
   cacheOnFrontEndNav: false,
   reloadOnOnline: true,
   disableDevLogs: true,

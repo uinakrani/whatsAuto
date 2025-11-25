@@ -1,9 +1,9 @@
 'use client';
 
-import { ButtonHTMLAttributes, ReactNode } from 'react';
+import { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'as'> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   children: ReactNode;
@@ -38,14 +38,16 @@ export default function Button({
     lg: 'px-6 py-3 text-lg',
   };
   
+  // Filter out button-specific props when rendering as span/div
+  const { type, ...restProps } = props;
   const componentProps = as === 'button' 
-    ? { ...props, disabled: disabled || isLoading }
-    : { ...props };
+    ? { ...restProps, type: type || 'button', disabled: disabled || isLoading }
+    : { ...restProps };
 
   return (
     <Component
       className={cn(baseStyles, variants[variant], sizes[size], className)}
-      {...componentProps}
+      {...(componentProps as any)}
     >
       {isLoading ? (
         <span className="flex items-center gap-2">

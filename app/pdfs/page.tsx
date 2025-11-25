@@ -33,7 +33,12 @@ export default function PDFsPage() {
     if (!files || files.length === 0) return;
 
     for (const file of Array.from(files)) {
-      if (file.type !== 'application/pdf') {
+      // Check file type - be more lenient for mobile devices
+      const isPDF = file.type === 'application/pdf' || 
+                    file.name.toLowerCase().endsWith('.pdf') ||
+                    (file.type === '' && file.name.toLowerCase().endsWith('.pdf'));
+      
+      if (!isPDF) {
         error(`${file.name} is not a PDF file`);
         continue;
       }
@@ -152,17 +157,23 @@ export default function PDFsPage() {
           <p className="text-lg font-semibold text-gray-700 mb-2">
             Drag and drop PDFs here, or
           </p>
-          <label className="inline-block">
+          <label htmlFor="pdf-file-input" className="inline-block cursor-pointer">
             <input
               type="file"
-              accept=".pdf"
+              accept="application/pdf,.pdf"
               multiple
               onChange={handleFileInput}
               className="hidden"
+              id="pdf-file-input"
             />
-            <Button variant="primary">
-              Choose Files
-            </Button>
+            <span className="inline-block">
+              <Button 
+                variant="primary"
+                type="button"
+              >
+                Choose Files
+              </Button>
+            </span>
           </label>
           <p className="text-sm text-gray-500 mt-2">
             Upload your invitation PDF files

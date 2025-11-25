@@ -215,6 +215,11 @@ export default function AssignPage() {
                             onChange={(e) => {
                               if (e.target.value) {
                                 assignPDF(contact.id, e.target.value, assignment?.version || '2-members');
+                              } else {
+                                // Remove assignment if PDF is deselected
+                                const newAssignments = new Map(assignments);
+                                newAssignments.delete(contact.id);
+                                setAssignments(newAssignments);
                               }
                             }}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
@@ -275,19 +280,29 @@ export default function AssignPage() {
           })}
         </div>
 
-        {/* Save Button */}
+        {/* Save Button - Always show if there are assignments */}
         {assignments.size > 0 && (
-          <div className="fixed bottom-4 left-0 right-0 px-4">
-            <div className="max-w-4xl mx-auto">
-              <Button
-                onClick={saveAllAssignments}
-                variant="primary"
-                className="w-full"
-                size="lg"
-              >
-                Save {assignments.size} Assignment(s)
-              </Button>
-            </div>
+          <div className="mb-24 mt-8">
+            <Button
+              onClick={saveAllAssignments}
+              variant="primary"
+              className="w-full"
+              size="lg"
+            >
+              Save {assignments.size} Assignment(s)
+            </Button>
+            <p className="text-sm text-gray-500 text-center mt-2">
+              Make sure to save your assignments before leaving this page
+            </p>
+          </div>
+        )}
+        
+        {/* Show message if contacts are selected but no PDF assigned */}
+        {selectedContacts.size > 0 && assignments.size === 0 && (
+          <div className="mb-24 mt-8 bg-amber-50 border border-amber-200 rounded-xl p-4">
+            <p className="text-sm text-amber-800 text-center">
+              ⚠️ Please select a PDF for the selected contact(s) to enable saving
+            </p>
           </div>
         )}
       </div>

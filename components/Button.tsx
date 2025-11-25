@@ -18,8 +18,10 @@ export default function Button({
   children,
   isLoading,
   disabled,
+  as = 'button',
   ...props
 }: ButtonProps) {
+  const Component = as;
   const baseStyles = 'font-semibold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] min-w-[44px]';
   
   const variants = {
@@ -36,11 +38,14 @@ export default function Button({
     lg: 'px-6 py-3 text-lg',
   };
   
+  const componentProps = as === 'button' 
+    ? { ...props, disabled: disabled || isLoading }
+    : { ...props };
+
   return (
-    <button
+    <Component
       className={cn(baseStyles, variants[variant], sizes[size], className)}
-      disabled={disabled || isLoading}
-      {...props}
+      {...componentProps}
     >
       {isLoading ? (
         <span className="flex items-center gap-2">
@@ -50,7 +55,7 @@ export default function Button({
       ) : (
         children
       )}
-    </button>
+    </Component>
   );
 }
 

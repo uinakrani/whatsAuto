@@ -1,0 +1,43 @@
+{
+  "name": "WhatsAuto - WhatsApp Invitation Automation",
+  "short_name": "WhatsAuto",
+  "description": "Automate WhatsApp invitation sending with PDF attachments",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0ea5e9",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Manage PDFs",
+      "short_name": "PDFs",
+      "description": "Upload and manage invitation PDFs",
+      "url": "/pdfs",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Manage Contacts",
+      "short_name": "Contacts",
+      "description": "Import and manage contacts",
+      "url": "/contacts",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}
+

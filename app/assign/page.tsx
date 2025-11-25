@@ -72,6 +72,7 @@ export default function AssignPage() {
     try {
       const { updateContactStatus } = await import('@/lib/storage');
       
+      console.log('Saving assignments:', assignments.size);
       for (const [contactId, assignment] of assignments.entries()) {
         const assignmentData: Assignment = {
           contactId,
@@ -79,6 +80,7 @@ export default function AssignPage() {
           version: assignment.version,
           assignedAt: new Date(),
         };
+        console.log('Saving assignment:', assignmentData);
         await saveAssignment(assignmentData);
         // Update contact status to 'assigned'
         await updateContactStatus(contactId, 'assigned');
@@ -86,9 +88,13 @@ export default function AssignPage() {
       success(`Saved ${assignments.size} assignment(s)`);
       // Reload data to refresh UI
       await loadData();
+      
+      // Verify assignments were saved
+      const savedAssignments = await getAssignments();
+      console.log('Assignments after save:', savedAssignments.length);
     } catch (err) {
       error('Failed to save assignments');
-      console.error(err);
+      console.error('Error saving assignments:', err);
     }
   };
 

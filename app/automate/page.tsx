@@ -48,7 +48,7 @@ export default function AutomatePage() {
       
       for (const assignment of loadedAssignments) {
         const contact = loadedContacts.find(c => c.id === assignment.contactId);
-        if (contact && (contact.status === 'pending' || contact.status === 'assigned')) {
+        if (contact) {
           const pdf = loadedPDFs.find(p => p.id === assignment.pdfId) || null;
           
           // Verify PDF version matches assignment
@@ -57,13 +57,20 @@ export default function AutomatePage() {
             // Still add to queue but warn user
           }
           
-          queue.push({ contact, assignment, pdf });
+          // Add to queue if status is pending or assigned (or if no status set, default to pending)
+          const contactStatus = contact.status || 'pending';
+          if (contactStatus === 'pending' || contactStatus === 'assigned') {
+            queue.push({ contact, assignment, pdf });
+          }
+        } else {
+          console.warn(`Contact not found for assignment: ${assignment.contactId}`);
         }
       }
 
       automationQueueRef.current = queue;
       setCurrentIndex(0);
 
+      // Calculate stats - count all contacts with assignments, regardless of status
       const assignedContacts = loadedContacts.filter((c) =>
         loadedAssignments.some((a) => a.contactId === c.id)
       );
@@ -78,14 +85,21 @@ export default function AutomatePage() {
   };
 
   const updateStats = (loadedContacts: Contact[], loadedAssignments: Assignment[]) => {
+    // Count all contacts that have assignments
     const assignedContacts = loadedContacts.filter((c) =>
       loadedAssignments.some((a) => a.contactId === c.id)
     );
 
+    console.log('Updating stats - assigned contacts:', assignedContacts.length);
+    console.log('Assignments:', loadedAssignments);
+
     setStats({
       total: assignedContacts.length,
       sent: assignedContacts.filter((c) => c.status === 'sent').length,
-      pending: assignedContacts.filter((c) => c.status === 'pending' || c.status === 'assigned').length,
+      pending: assignedContacts.filter((c) => {
+        const status = c.status || 'pending';
+        return status === 'pending' || status === 'assigned';
+      }).length,
       failed: assignedContacts.filter((c) => c.status === 'failed').length,
     });
   };

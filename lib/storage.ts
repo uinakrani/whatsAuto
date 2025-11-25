@@ -150,3 +150,31 @@ export async function getAssignments(): Promise<any[]> {
   });
 }
 
+export async function updateContactStatus(contactId: string, status: 'pending' | 'assigned' | 'sent' | 'failed', errorMessage?: string): Promise<void> {
+  const database = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([STORES.CONTACTS], 'readwrite');
+    const store = transaction.objectStore(STORES.CONTACTS);
+    const getRequest = store.get(contactId);
+    
+    getRequest.onsuccess = () => {
+      const contact = getRequest.result;
+      if (contact) {
+        contact.status = status;
+        if (status === 'sent') {
+          contact.lastSent = new Date();
+        }
+        if (errorMessage) {
+          contact.errorMessage = errorMessage;
+        }
+        const putRequest = store.put(contact);
+        putRequest.onsuccess = () => resolve();
+        putRequest.onerror = () => reject(putRequest.error);
+      } else {
+        reject(new Error('Contact not found'));
+      }
+    };
+    getRequest.onerror = () => reject(getRequest.error);
+  });
+}
+

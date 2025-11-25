@@ -190,6 +190,110 @@ export default function ContactsPage() {
     }
   };
 
+  const addDummyContacts = async () => {
+    const dummyContacts: Contact[] = [
+      {
+        id: crypto.randomUUID(),
+        name: 'Rajesh Kumar',
+        phone: '+919876543210',
+        phoneFormatted: '+91 98765 43210',
+        isSaved: false,
+        status: 'pending',
+        searchMethod: 'phone',
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'Priya Sharma',
+        phone: '+919876543211',
+        phoneFormatted: '+91 98765 43211',
+        isSaved: false,
+        status: 'pending',
+        searchMethod: 'phone',
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'Amit Patel',
+        phone: '+919876543212',
+        phoneFormatted: '+91 98765 43212',
+        isSaved: false,
+        status: 'pending',
+        searchMethod: 'phone',
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'Sneha Reddy',
+        phone: '+919876543213',
+        phoneFormatted: '+91 98765 43213',
+        isSaved: false,
+        status: 'pending',
+        searchMethod: 'phone',
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'Vikram Singh',
+        phone: '+919876543214',
+        phoneFormatted: '+91 98765 43214',
+        isSaved: false,
+        status: 'pending',
+        searchMethod: 'phone',
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'Anjali Desai',
+        phone: '+919876543215',
+        phoneFormatted: '+91 98765 43215',
+        isSaved: false,
+        status: 'pending',
+        searchMethod: 'phone',
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'Rahul Mehta',
+        phone: '+919876543216',
+        phoneFormatted: '+91 98765 43216',
+        isSaved: false,
+        status: 'pending',
+        searchMethod: 'phone',
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'Kavita Nair',
+        phone: '+919876543217',
+        phoneFormatted: '+91 98765 43217',
+        isSaved: false,
+        status: 'pending',
+        searchMethod: 'phone',
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'Mohit Gupta',
+        phone: '+919876543218',
+        phoneFormatted: '+91 98765 43218',
+        isSaved: false,
+        status: 'pending',
+        searchMethod: 'phone',
+      },
+      {
+        id: crypto.randomUUID(),
+        name: 'Divya Iyer',
+        phone: '+919876543219',
+        phoneFormatted: '+91 98765 43219',
+        isSaved: false,
+        status: 'pending',
+        searchMethod: 'phone',
+      },
+    ];
+
+    try {
+      await saveContacts(dummyContacts);
+      success(`Added ${dummyContacts.length} dummy contacts with Indian numbers`);
+      loadContacts();
+    } catch (err) {
+      error('Failed to add dummy contacts');
+      console.error(err);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -210,7 +314,7 @@ export default function ContactsPage() {
         </header>
 
         {/* Import Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Button
             onClick={importFromDevice}
             variant="primary"
@@ -236,6 +340,15 @@ export default function ContactsPage() {
               Import from File
             </Button>
           </label>
+
+          <Button
+            onClick={addDummyContacts}
+            variant="outline"
+            className="w-full flex items-center justify-center gap-2"
+          >
+            <Users className="w-5 h-5" />
+            Add Dummy Contacts
+          </Button>
         </div>
 
         {/* Search Bar */}

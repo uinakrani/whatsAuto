@@ -21,8 +21,15 @@ export function formatPhoneNumber(phone: string): string {
 export function formatPhoneDisplay(phone: string): string {
   const cleaned = formatPhoneNumber(phone);
   
-  // Format for display (e.g., +1 234 567 8900)
-  if (cleaned.startsWith('+')) {
+  // Format for display
+  if (cleaned.startsWith('+91')) {
+    // Indian number format: +91 XXXXX XXXXX
+    const number = cleaned.substring(3);
+    if (number.length === 10) {
+      return `+91 ${number.substring(0, 5)} ${number.substring(5)}`;
+    }
+  } else if (cleaned.startsWith('+')) {
+    // Other countries: +1 234 567 8900
     const countryCode = cleaned.substring(1, 2);
     const number = cleaned.substring(2);
     

@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import { ArrowLeft, CheckCircle2, FileText, Users } from 'lucide-react';
 import Link from 'next/link';
 import Button from '@/components/Button';
-import { getContacts, getPDFs, saveAssignment } from '@/lib/storage';
+import { getContacts, getPDFs, getAssignments, saveAssignment } from '@/lib/storage';
 import { Contact, PDF, Assignment } from '@/types';
-import toast from 'react-hot-toast';
+import { useNotifications } from '@/lib/notifications';
 
 export default function AssignPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -14,6 +14,7 @@ export default function AssignPage() {
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
   const [assignments, setAssignments] = useState<Map<string, { pdfId: string; version: '2-members' | 'all-members' }>>(new Map());
   const [loading, setLoading] = useState(true);
+  const { success, error } = useNotifications();
 
   useEffect(() => {
     loadData();
@@ -21,15 +22,26 @@ export default function AssignPage() {
 
   const loadData = async () => {
     try {
-      const [loadedContacts, loadedPDFs] = await Promise.all([
+      const [loadedContacts, loadedPDFs, loadedAssignments] = await Promise.all([
         getContacts(),
         getPDFs(),
+        getAssignments(),
       ]);
       setContacts(loadedContacts);
       setPdfs(loadedPDFs);
-    } catch (error) {
-      toast.error('Failed to load data');
-      console.error(error);
+      
+      // Load existing assignments into state
+      const assignmentsMap = new Map<string, { pdfId: string; version: '2-members' | 'all-members' }>();
+      for (const assignment of loadedAssignments) {
+        assignmentsMap.set(assignment.contactId, {
+          pdfId: assignment.pdfId,
+          version: assignment.version,
+        });
+      }
+      setAssignments(assignmentsMap);
+    } catch (err) {
+      error('Failed to load data');
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -53,11 +65,13 @@ export default function AssignPage() {
 
   const saveAllAssignments = async () => {
     if (assignments.size === 0) {
-      toast.error('No assignments to save');
+      error('No assignments to save');
       return;
     }
 
     try {
+      const { updateContactStatus } = await import('@/lib/storage');
+      
       for (const [contactId, assignment] of assignments.entries()) {
         const assignmentData: Assignment = {
           contactId,
@@ -66,11 +80,15 @@ export default function AssignPage() {
           assignedAt: new Date(),
         };
         await saveAssignment(assignmentData);
+        // Update contact status to 'assigned'
+        await updateContactStatus(contactId, 'assigned');
       }
-      toast.success(`Saved ${assignments.size} assignment(s)`);
-    } catch (error) {
-      toast.error('Failed to save assignments');
-      console.error(error);
+      success(`Saved ${assignments.size} assignment(s)`);
+      // Reload data to refresh UI
+      await loadData();
+    } catch (err) {
+      error('Failed to save assignments');
+      console.error(err);
     }
   };
 

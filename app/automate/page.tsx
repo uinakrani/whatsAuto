@@ -7,7 +7,7 @@ import Button from '@/components/Button';
 import { getContacts, getAssignments, getPDFs, updateContactStatus } from '@/lib/storage';
 import { openWhatsAppForContact, shareViaWhatsApp, isMobileDevice, getDelayBetweenMessages } from '@/lib/whatsapp';
 import { Contact, PDF, Assignment } from '@/types';
-import toast from 'react-hot-toast';
+import { useNotifications } from '@/lib/notifications';
 
 export default function AutomatePage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -26,6 +26,7 @@ export default function AutomatePage() {
   const automationQueueRef = useRef<Array<{ contact: Contact; assignment: Assignment; pdf: PDF | null }>>([]);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isRunningRef = useRef(false);
+  const { success, error, info } = useNotifications();
 
   useEffect(() => {
     loadData();
@@ -49,6 +50,13 @@ export default function AutomatePage() {
         const contact = loadedContacts.find(c => c.id === assignment.contactId);
         if (contact && (contact.status === 'pending' || contact.status === 'assigned')) {
           const pdf = loadedPDFs.find(p => p.id === assignment.pdfId) || null;
+          
+          // Verify PDF version matches assignment
+          if (pdf && !pdf.versions[assignment.version]) {
+            console.warn(`PDF ${pdf.name} does not have version ${assignment.version} enabled`);
+            // Still add to queue but warn user
+          }
+          
           queue.push({ contact, assignment, pdf });
         }
       }
@@ -61,9 +69,9 @@ export default function AutomatePage() {
       );
 
       updateStats(loadedContacts, loadedAssignments);
-    } catch (error) {
-      toast.error('Failed to load data');
-      console.error(error);
+    } catch (err) {
+      error('Failed to load data');
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -88,7 +96,7 @@ export default function AutomatePage() {
       isRunningRef.current = false;
       setIsRunning(false);
       setCurrentContact(null);
-      toast.success('All contacts processed!');
+      success('All contacts processed!');
       await loadData(); // Refresh stats
       return;
     }
@@ -114,14 +122,14 @@ export default function AutomatePage() {
         await openWhatsAppForContact(item.contact, item.pdf, item.assignment.version);
       }
 
-      toast.success(
+      success(
         `Opened WhatsApp for ${item.contact.name}. Please send the message, then click "Mark as Sent" or "Skip".`,
-        { duration: 5000 }
+        5000
       );
-    } catch (error) {
-      console.error('Error opening WhatsApp:', error);
+    } catch (err) {
+      console.error('Error opening WhatsApp:', err);
       await updateContactStatus(item.contact.id, 'failed', 'Failed to open WhatsApp');
-      toast.error(`Failed to open WhatsApp for ${item.contact.name}`);
+      error(`Failed to open WhatsApp for ${item.contact.name}`);
       
       // Move to next after delay
       const delay = getDelayBetweenMessages();
@@ -136,19 +144,19 @@ export default function AutomatePage() {
 
   const handleStart = async () => {
     if (stats.total === 0) {
-      toast.error('No contacts assigned. Please assign PDFs to contacts first.');
+      error('No contacts assigned. Please assign PDFs to contacts first.');
       return;
     }
 
     if (automationQueueRef.current.length === 0) {
-      toast.error('No pending contacts to process.');
+      error('No pending contacts to process.');
       return;
     }
 
     isRunningRef.current = true;
     setIsRunning(true);
     setCurrentIndex(0);
-    toast.success('Automation started! Follow the prompts to send messages.');
+    success('Automation started! Follow the prompts to send messages.');
     await processNextContact();
   };
 
@@ -159,7 +167,7 @@ export default function AutomatePage() {
     }
     isRunningRef.current = false;
     setIsRunning(false);
-    toast.info('Automation paused');
+    info('Automation paused');
   };
 
   const handleMarkAsSent = async () => {
@@ -167,7 +175,7 @@ export default function AutomatePage() {
 
     try {
       await updateContactStatus(currentContact.id, 'sent');
-      toast.success(`Marked ${currentContact.name} as sent`);
+      success(`Marked ${currentContact.name} as sent`);
       
       // Move to next contact after delay
       const delay = getDelayBetweenMessages();
@@ -178,9 +186,9 @@ export default function AutomatePage() {
           processNextContact();
         }
       }, delay);
-    } catch (error) {
-      toast.error('Failed to update status');
-      console.error(error);
+    } catch (err) {
+      error('Failed to update status');
+      console.error(err);
     }
   };
 
@@ -203,7 +211,7 @@ export default function AutomatePage() {
 
     try {
       await updateContactStatus(currentContact.id, 'failed', 'Marked as failed by user');
-      toast.info(`Marked ${currentContact.name} as failed`);
+      info(`Marked ${currentContact.name} as failed`);
       
       // Move to next contact after delay
       const delay = getDelayBetweenMessages();
@@ -214,9 +222,9 @@ export default function AutomatePage() {
           processNextContact();
         }
       }, delay);
-    } catch (error) {
-      toast.error('Failed to update status');
-      console.error(error);
+    } catch (err) {
+      error('Failed to update status');
+      console.error(err);
     }
   };
 

@@ -6,7 +6,7 @@ import Button from '@/components/Button';
 import { getContacts, saveContacts, deleteContact } from '@/lib/storage';
 import { Contact } from '@/types';
 import { formatPhoneNumber, formatPhoneDisplay } from '@/lib/utils';
-import toast from 'react-hot-toast';
+import { useNotifications } from '@/lib/notifications';
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -14,6 +14,7 @@ export default function ContactsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
+  const { success, error } = useNotifications();
 
   useEffect(() => {
     loadContacts();
@@ -40,9 +41,9 @@ export default function ContactsPage() {
       const loadedContacts = await getContacts();
       setContacts(loadedContacts);
       setFilteredContacts(loadedContacts);
-    } catch (error) {
-      toast.error('Failed to load contacts');
-      console.error(error);
+    } catch (err) {
+      error('Failed to load contacts');
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -62,15 +63,15 @@ export default function ContactsPage() {
         }
       } else {
         // Fallback: Use file input or show instructions
-        toast.error('Contact Picker API not supported. Please use file import.');
+        error('Contact Picker API not supported. Please use file import.');
         document.getElementById('file-import')?.click();
       }
-    } catch (error: any) {
-      if (error.name === 'NotAllowedError') {
-        toast.error('Permission denied. Please allow contact access.');
+    } catch (err: any) {
+      if (err.name === 'NotAllowedError') {
+        error('Permission denied. Please allow contact access.');
       } else {
-        toast.error('Failed to import contacts from device');
-        console.error(error);
+        error('Failed to import contacts from device');
+        console.error(err);
       }
     }
   };
@@ -103,11 +104,11 @@ export default function ContactsPage() {
     if (newContacts.length > 0) {
       try {
         await saveContacts(newContacts);
-        toast.success(`Imported ${newContacts.length} contact(s)`);
+        success(`Imported ${newContacts.length} contact(s)`);
         loadContacts();
-      } catch (error) {
-        toast.error('Failed to save imported contacts');
-        console.error(error);
+      } catch (err) {
+        error('Failed to save imported contacts');
+        console.error(err);
       }
     }
   };
@@ -147,11 +148,11 @@ export default function ContactsPage() {
     if (newContacts.length > 0) {
       try {
         await saveContacts(newContacts);
-        toast.success(`Imported ${newContacts.length} contact(s) from file`);
+        success(`Imported ${newContacts.length} contact(s) from file`);
         loadContacts();
-      } catch (error) {
-        toast.error('Failed to import contacts from file');
-        console.error(error);
+      } catch (err) {
+        error('Failed to import contacts from file');
+        console.error(err);
       }
     }
 
@@ -163,11 +164,11 @@ export default function ContactsPage() {
 
     try {
       await deleteContact(contactId);
-      toast.success('Contact deleted');
+      success('Contact deleted');
       loadContacts();
-    } catch (error) {
-      toast.error('Failed to delete contact');
-      console.error(error);
+    } catch (err) {
+      error('Failed to delete contact');
+      console.error(err);
     }
   };
 

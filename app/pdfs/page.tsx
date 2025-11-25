@@ -5,12 +5,13 @@ import { FileText, Upload, X, Check, CheckCircle2 } from 'lucide-react';
 import Button from '@/components/Button';
 import { getPDFs, savePDF, deletePDF } from '@/lib/storage';
 import { PDF } from '@/types';
-import toast from 'react-hot-toast';
+import { useNotifications } from '@/lib/notifications';
 
 export default function PDFsPage() {
   const [pdfs, setPdfs] = useState<PDF[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { success, error } = useNotifications();
 
   useEffect(() => {
     loadPDFs();
@@ -20,9 +21,9 @@ export default function PDFsPage() {
     try {
       const loadedPDFs = await getPDFs();
       setPdfs(loadedPDFs);
-    } catch (error) {
-      toast.error('Failed to load PDFs');
-      console.error(error);
+    } catch (err) {
+      error('Failed to load PDFs');
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -33,7 +34,7 @@ export default function PDFsPage() {
 
     for (const file of Array.from(files)) {
       if (file.type !== 'application/pdf') {
-        toast.error(`${file.name} is not a PDF file`);
+        error(`${file.name} is not a PDF file`);
         continue;
       }
 
@@ -52,10 +53,10 @@ export default function PDFsPage() {
 
       try {
         await savePDF(pdf);
-        toast.success(`${file.name} uploaded successfully`);
-      } catch (error) {
-        toast.error(`Failed to upload ${file.name}`);
-        console.error(error);
+        success(`${file.name} uploaded successfully`);
+      } catch (err) {
+        error(`Failed to upload ${file.name}`);
+        console.error(err);
       }
     }
 
@@ -96,11 +97,11 @@ export default function PDFsPage() {
 
     try {
       await savePDF(updatedPDF);
-      toast.success('PDF updated');
+      success('PDF updated');
       loadPDFs();
-    } catch (error) {
-      toast.error('Failed to update PDF');
-      console.error(error);
+    } catch (err) {
+      error('Failed to update PDF');
+      console.error(err);
     }
   };
 
@@ -109,11 +110,11 @@ export default function PDFsPage() {
 
     try {
       await deletePDF(pdfId);
-      toast.success('PDF deleted');
+      success('PDF deleted');
       loadPDFs();
-    } catch (error) {
-      toast.error('Failed to delete PDF');
-      console.error(error);
+    } catch (err) {
+      error('Failed to delete PDF');
+      console.error(err);
     }
   };
 

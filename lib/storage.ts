@@ -51,12 +51,31 @@ export async function initDB(): Promise<IDBDatabase> {
 // PDF operations
 export async function savePDF(pdf: any): Promise<void> {
   const database = await initDB();
-  return new Promise((resolve, reject) => {
-    const transaction = database.transaction([STORES.PDFS], 'readwrite');
-    const store = transaction.objectStore(STORES.PDFS);
-    const request = store.put(pdf);
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Convert File to ArrayBuffer for IndexedDB storage
+      let fileData: ArrayBuffer | null = null;
+      if (pdf.file instanceof File || pdf.file instanceof Blob) {
+        fileData = await pdf.file.arrayBuffer();
+      } else if (pdf.file instanceof ArrayBuffer) {
+        fileData = pdf.file;
+      }
+
+      // Prepare PDF data for storage
+      const pdfData = {
+        ...pdf,
+        file: fileData, // Store as ArrayBuffer
+        uploadedAt: pdf.uploadedAt instanceof Date ? pdf.uploadedAt.toISOString() : pdf.uploadedAt,
+      };
+
+      const transaction = database.transaction([STORES.PDFS], 'readwrite');
+      const store = transaction.objectStore(STORES.PDFS);
+      const request = store.put(pdfData);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    } catch (error) {
+      reject(error);
+    }
   });
 }
 
@@ -66,7 +85,20 @@ export async function getPDFs(): Promise<any[]> {
     const transaction = database.transaction([STORES.PDFS], 'readonly');
     const store = transaction.objectStore(STORES.PDFS);
     const request = store.getAll();
-    request.onsuccess = () => resolve(request.result || []);
+    request.onsuccess = () => {
+      const pdfs = (request.result || []).map((pdf: any) => {
+        // Convert ArrayBuffer back to Blob for use
+        if (pdf.file instanceof ArrayBuffer) {
+          pdf.file = new Blob([pdf.file], { type: 'application/pdf' });
+        }
+        // Convert ISO string back to Date
+        if (typeof pdf.uploadedAt === 'string') {
+          pdf.uploadedAt = new Date(pdf.uploadedAt);
+        }
+        return pdf;
+      });
+      resolve(pdfs);
+    };
     request.onerror = () => reject(request.error);
   });
 }
@@ -99,7 +131,14 @@ export async function saveContacts(contacts: any[]): Promise<void> {
   return new Promise((resolve, reject) => {
     const transaction = database.transaction([STORES.CONTACTS], 'readwrite');
     const store = transaction.objectStore(STORES.CONTACTS);
-    contacts.forEach(contact => store.put(contact));
+    contacts.forEach(contact => {
+      // Ensure dates are serialized properly
+      const contactData = {
+        ...contact,
+        lastSent: contact.lastSent instanceof Date ? contact.lastSent.toISOString() : contact.lastSent,
+      };
+      store.put(contactData);
+    });
     transaction.oncomplete = () => resolve();
     transaction.onerror = () => reject(transaction.error);
   });
@@ -111,7 +150,16 @@ export async function getContacts(): Promise<any[]> {
     const transaction = database.transaction([STORES.CONTACTS], 'readonly');
     const store = transaction.objectStore(STORES.CONTACTS);
     const request = store.getAll();
-    request.onsuccess = () => resolve(request.result || []);
+    request.onsuccess = () => {
+      const contacts = (request.result || []).map((contact: any) => {
+        // Convert ISO string back to Date
+        if (contact.lastSent && typeof contact.lastSent === 'string') {
+          contact.lastSent = new Date(contact.lastSent);
+        }
+        return contact;
+      });
+      resolve(contacts);
+    };
     request.onerror = () => reject(request.error);
   });
 }
@@ -133,7 +181,12 @@ export async function saveAssignment(assignment: any): Promise<void> {
   return new Promise((resolve, reject) => {
     const transaction = database.transaction([STORES.ASSIGNMENTS], 'readwrite');
     const store = transaction.objectStore(STORES.ASSIGNMENTS);
-    const request = store.put(assignment);
+    // Ensure dates are serialized
+    const assignmentData = {
+      ...assignment,
+      assignedAt: assignment.assignedAt instanceof Date ? assignment.assignedAt.toISOString() : assignment.assignedAt,
+    };
+    const request = store.put(assignmentData);
     request.onsuccess = () => resolve();
     request.onerror = () => reject(request.error);
   });
@@ -145,7 +198,33 @@ export async function getAssignments(): Promise<any[]> {
     const transaction = database.transaction([STORES.ASSIGNMENTS], 'readonly');
     const store = transaction.objectStore(STORES.ASSIGNMENTS);
     const request = store.getAll();
-    request.onsuccess = () => resolve(request.result || []);
+    request.onsuccess = () => {
+      const assignments = (request.result || []).map((assignment: any) => {
+        // Convert ISO string back to Date
+        if (assignment.assignedAt && typeof assignment.assignedAt === 'string') {
+          assignment.assignedAt = new Date(assignment.assignedAt);
+        }
+        return assignment;
+      });
+      resolve(assignments);
+    };
+    request.onerror = () => reject(request.error);
+  });
+}
+
+export async function getAssignmentByContactId(contactId: string): Promise<any | null> {
+  const database = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([STORES.ASSIGNMENTS], 'readonly');
+    const store = transaction.objectStore(STORES.ASSIGNMENTS);
+    const request = store.get(contactId);
+    request.onsuccess = () => {
+      const assignment = request.result;
+      if (assignment && assignment.assignedAt && typeof assignment.assignedAt === 'string') {
+        assignment.assignedAt = new Date(assignment.assignedAt);
+      }
+      resolve(assignment || null);
+    };
     request.onerror = () => reject(request.error);
   });
 }
@@ -162,12 +241,17 @@ export async function updateContactStatus(contactId: string, status: 'pending' |
       if (contact) {
         contact.status = status;
         if (status === 'sent') {
-          contact.lastSent = new Date();
+          contact.lastSent = new Date().toISOString();
         }
         if (errorMessage) {
           contact.errorMessage = errorMessage;
         }
-        const putRequest = store.put(contact);
+        // Ensure dates are serialized
+        const contactData = {
+          ...contact,
+          lastSent: contact.lastSent instanceof Date ? contact.lastSent.toISOString() : contact.lastSent,
+        };
+        const putRequest = store.put(contactData);
         putRequest.onsuccess = () => resolve();
         putRequest.onerror = () => reject(putRequest.error);
       } else {

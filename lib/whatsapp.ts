@@ -21,6 +21,10 @@ export async function openWhatsAppForContact(
   pdf: PDF | null,
   version: '2-members' | 'all-members'
 ): Promise<void> {
+  if (typeof window === 'undefined') {
+    throw new Error('This function must be called in a browser environment');
+  }
+  
   const phone = contact.phone;
   const url = generateWhatsAppWebURL(phone);
   
@@ -32,6 +36,9 @@ export async function openWhatsAppForContact(
 }
 
 export function isMobileDevice(): boolean {
+  if (typeof navigator === 'undefined') {
+    return false;
+  }
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
     navigator.userAgent
   );
@@ -42,7 +49,7 @@ export async function shareViaWhatsApp(
   pdf: PDF | null,
   version: '2-members' | 'all-members'
 ): Promise<boolean> {
-  if (!('share' in navigator)) {
+  if (typeof navigator === 'undefined' || !('share' in navigator)) {
     return false;
   }
 
@@ -61,9 +68,9 @@ export async function shareViaWhatsApp(
       await updateContactStatus(contact.id, 'assigned');
       return true;
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     // User cancelled or error occurred
-    if (error.name !== 'AbortError') {
+    if (error instanceof Error && error.name !== 'AbortError') {
       console.error('Share failed:', error);
     }
     return false;

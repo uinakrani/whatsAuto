@@ -24,7 +24,7 @@ export default function AutomatePage() {
   });
   const [loading, setLoading] = useState(true);
   const automationQueueRef = useRef<Array<{ contact: Contact; assignment: Assignment; pdf: PDF | null }>>([]);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isRunningRef = useRef(false);
 
   useEffect(() => {
